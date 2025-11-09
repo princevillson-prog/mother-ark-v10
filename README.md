@@ -15,6 +15,5 @@
 ​Status: Conceptual Prototype (Not a commercial product).
 ​🌐 Live Demo & Verification
 ​The live version of this interactive prototype is available here:
-[YOUR LIVE URL WILL APPEAR HERE SHORTLY]
-​[YOUR NAME HERE] | AI Ethics & Conceptual Engineer
+[https://princevillson-prog.github.io/mother-ark-v10/] | AI Ethics & Conceptual Engineer
 ​Find me on LinkedIn for specialized consulting in AI Governance and Compliance, where I apply this level of conceptual rigor to real-world business risks.
