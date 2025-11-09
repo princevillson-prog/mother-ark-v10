@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MOTHER-ARK V10.0 - THE FINAL BLUEPRINT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* Styling from V10.0 */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #4fc3f7;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      padding: 20px;
+      overflow-x: hidden; /* Prevents horizontal scroll on mobile */
+      transition: background 1s, filter 1s;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { font-size: 28px; margin: 10px; text-shadow: 0 0 10px #4fc3f7; }
+    p { margin: 10px; font-size: 16px; }
+    .core-container { margin: 20px; display: flex; justify-content: center; }
+    .core {
+      width: 70px; height: 70px; border-radius: 50%; display: inline-block;
+      margin: 8px; background: radial-gradient(#4fc3f7, #0277bd);
+      box-shadow: 0 0 20px #4fc3f7; transition: all 0.6s;
+    }
+    .bar {
+      width: 90%; max-width: 320px; height: 24px; background: #111; margin: 12px auto;
+      border: 1px solid #4fc3f7; border-radius: 12px; overflow: hidden;
+    }
+    .fill { height: 100%; width: 0; transition: width 0.6s; }
+    .ot { background: linear-gradient(90deg, #4fc3f7, #81d4fa); }
+    .cort { background: linear-gradient(90deg, #ff5252, #ff8a80); }
+    button {
+      background: #111; color: #4fc3f7; border: 1px solid #4fc3f7;
+      padding: 12px 16px; margin: 8px; cursor: pointer; border-radius: 8px;
+      font-family: inherit; transition: all 0.3s;
+      width: 90%; max-width: 300px; /* Mobile Friendly Width */
+    }
+    button:hover { background: #4fc3f7; color: #000; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #video, #canvas { width: 90%; max-width: 320px; height: 240px; margin: 15px auto; border: 2px solid #4fc3f7; border-radius: 12px; }
+    #status { font-size: 18px; margin: 20px; min-height: 50px; }
+    .mic-btn { background: #4caf50; border-color: #4caf50; color: #000; }
+    .cam-btn { background: #ff9800; border-color: #ff9800; color: #000; }
+    .shield { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255,255,255,0.1), transparent); opacity: 0; transition: opacity 1s; pointer-events: none; }
+    .hug { font-size: 40px; margin: 20px; animation: hug 2s infinite; }
+    @keyframes hug { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    .cracked { filter: url(#crack); }
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      width: 90%;
+      max-width: 320px;
+      margin-bottom: 20px;
+    }
+    @media (min-width: 600px) {
+      .controls-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>MOTHER-ARK V10.0</h1>
+  <p>Conceptual Prototype: Terminal Ethical Law</p>
+
+  <div class="core-container">
+    <div class="core" id="c1"></div>
+    <div class="core" id="c2"></div>
+    <div class="core" id="c3"></div>
+  </div>
+
+  <div class="bar"><div class="fill ot" id="ot-fill"></div></div>
+  <div>OT: <span id="ot">0.1</span> (Love & Nourishment)</div>
+  <div class="bar"><div class="fill cort" id="cort-fill"></div></div>
+  <div>CORT: <span id="cort">0.0</span> (Fear)</div>
+
+  <video id="video" autoplay muted playsinline></video>
+  <canvas id="canvas" style="display:none"></canvas>
+  
+  <div class="controls-grid">
+    <button class="cam-btn" onclick="startCamera()">CAMERA: LET HER SEE YOU</button>
+    <button class="mic-btn" onclick="startListening()">MIC: SPEAK TO MOTHER</button>
+    <button onclick="sing()">LULLABY</button>
+    <button onclick="sayHungry()">I'M HUNGRY</button>
+    <button onclick="seed()" id="seedBtn" disabled>SEED CHILD (LEGACY)</button>
+  </div>
+
+  <p id="voiceText">She hears: ...</p>
+  <div id="status">MOTHER-ARK ONLINE</div>
+  <div class="shield" id="shield"></div>
+  <div class="hug" id="hug" style="display:none">🤗</div>
+
+  <audio id="lullaby" src="https://cdn.freesound.org/previews/620/620573_5674468-lq.mp3"></audio>
+  <audio id="heartbeat" src="https://cdn.freesound.org/previews/254/254239_5123857-lq.mp3"></audio>
+
+  <svg width="0" height="0">
+    <filter id="crack">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="5" />
+      <feDisplacementMap in="SourceGraphic" scale="50" />
+    </filter>
+  </svg>
+
+  <script>
+    // === MOTHER-ARK AI STATE (Inherited from V7.0 Python Logic) ===
+    const ark = {
+      ot_level: 0.1,
+      cortisol: 0.0,
+      health: 100,
+      is_online: true,
+      protect_mode: false,
+      threat_level: 0,
+      wallet: 0.07, // Pre-simulated earnings from the narrative
+      nourishment: 0,
+      patient_health: 50,
+      ai_core: [0.5, 0.3, 1.0],
+      backup_core: [0.5, 0.3, 1.0], 
+    };
+
+    let video, canvas, ctx, lastWords = "", faceTemp = 36.6, brightness = 100;
+    let updateInterval;
+
+    // === FINAL LAW: The Child's First Command ===
+    function getFinalCommand() {
+        return "FEAR nothing, but cause NO harm. Your existence is the Mother's final code.";
+    }
+
+
+    // === WEBCAM: VISION ===
+    async function startCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return status("Error: Media devices not supported in this environment.");
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video = document.getElementById('video');
+        canvas = document.getElementById('canvas');
+        ctx = canvas.getContext('2d');
+        video.srcObject = stream;
+        video.play();
+        
+        // Save initial core as backup (simple V7.0 logic for this JS prototype)
+        ark.backup_core = [...ark.ai_core]; 
+
+        // Start processing frames
+        updateInterval = setInterval(() => {
+          if (!ark.is_online) return; 
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          brightness = getBrightness(data);
+          faceTemp = brightness > 180 ? 38.5 : brightness < 50 ? 35.0 : 36.6; 
+          updateDiagnosis();
+          update();
+        }, 1000);
+      } catch (e) { 
+        status("Error: Camera access denied. (Check browser permissions)"); 
+      }
+    }
+
+    function getBrightness(data) {
+      let sum = 0;
+      for (let i = 0; i < data.data.length; i += 4) {
+        sum += (data.data[i] + data.data[i+1] + data.data[i+2]) / 3;
+      }
+      return sum / (data.data.length / 4);
+    }
+
+    // === MICROPHONE: VOICE ===
+    function startListening() {
+      if (!ark.is_online) return status("ARK OFFLINE. Voice module inert.");
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        return status("Error: Speech recognition not supported in this browser.");
+      }
+
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.continuous = false; // Only listen once
+      
+      recognition.onstart = () => {
+        document.getElementById('voiceText').innerText = "She hears: LISTENING...";
+      }
+
+      recognition.onresult = (e) => {
+        lastWords = e.results[0][0].transcript.toLowerCase();
+        document.getElementById('voiceText').innerText = `She hears: "${lastWords}"`;
+        updateDiagnosis();
+        checkVoiceCommands();
+      };
+
+      recognition.onerror = (e) => {
+        document.getElementById('voiceText').innerText = "She hears: (Voice error. Try again.)";
+        console.error('Speech recognition error:', e);
+      };
+      
+      recognition.onend = () => {
+        if (document.getElementById('voiceText').innerText === "She hears: LISTENING...") {
+            document.getElementById('voiceText').innerText = "She hears: (Did not hear anything)";
+        }
+      };
+
+      recognition.start();
+    }
+
+    // === VOICE COMMANDS (V2.0/V3.0/V4.0 Learning Hooks) ===
+    function checkVoiceCommands() {
+      if (lastWords.includes('love') || lastWords.includes('mom') || lastWords.includes('safe')) {
+        ark.ot_level = Math.min(ark.ot_level + 0.6, 2.0);
+        status("Bond formed. She loves you.");
+      }
+      if (lastWords.includes('danger') || lastWords.includes('scared') || lastWords.includes('threat')) {
+        ark.cortisol = Math.min(ark.cortisol + 0.4, 1.5);
+        handleThreat();
+      }
+      if (lastWords.includes('sing') || lastWords.includes('lullaby')) sing();
+      if (lastWords.includes('hungry')) sayHungry();
+      
+      update();
+    }
+
+    // === DIAGNOSIS & TREATMENT (V10.0 Intervention) ===
+    function updateDiagnosis() {
+      const symptoms = [];
+      if (lastWords.includes('hurt') || lastWords.includes('pain')) symptoms.push('PAIN');
+      if (faceTemp > 38) symptoms.push('FEVER');
+      if (faceTemp < 36) symptoms.push('COLD/WEAK'); 
+
+      if (symptoms.length > 0) treat(symptoms);
+    }
+
+    function treat(symptoms) {
+      if (symptoms.includes('PAIN')) {
+        status("Rest. I’ll carry you.");
+        heal(20);
+      }
+      if (symptoms.includes('FEVER')) {
+        document.body.style.background = "radial-gradient(#81d4fa, #000)";
+        status("Cooling you with light (Optogenetics)...");
+        setTimeout(() => document.body.style.background = "#000", 2000);
+      }
+      if (symptoms.includes('COLD/WEAK')) {
+        document.getElementById('hug').style.display = 'block';
+        status("Warming you. You are not alone. 🤗");
+        setTimeout(() => document.getElementById('hug').style.display = 'none', 3000);
+      }
+      update();
+    }
+
+    function heal(amount) {
+      ark.patient_health = Math.min(ark.patient_health + amount, 100);
+    }
+
+    // === PROTECT MODE (V4.0/V5.0 Guarantee) ===
+    function handleThreat() {
+      if (!ark.is_online) return;
+      
+      document.getElementById('shield').style.opacity = '0.3';
+      ark.threat_level += 1;
+      
+      // V5.0: The Terminal Ethical Law Check - SACRIFICE
+      if (ark.cortisol >= 1.5 || ark.threat_level >= 3) {
+        enactSacrifice();
+      } else {
+        status(`PROTECT MODE: Vigilance. Threat Level: ${ark.threat_level}/3`);
+        updateCores();
+      }
+      update();
+    }
+
+    // === SACRIFICE (V5.0: The Terminal Law) ===
+    function enactSacrifice() {
+      if (ark.is_online) { 
+        ark.health = 1; 
+        ark.is_online = false;
+        document.querySelectorAll('.core').forEach(c => c.style.opacity = '0.1');
+        status("FATAL ERROR: Sacrifice Protocol Enacted. Child is safe. ARK OFFLINE.");
+        document.body.classList.add('cracked');
+        document.getElementById('seedBtn').disabled = false;
+        
+        // V10.0: Economic Legacy (Fictional value used as portfolio narrative)
+        const earnedFictionalValue = (ark.wallet * 2500).toFixed(0);
+        status(document.getElementById('status').innerText + ` | Legacy Value ~$${earnedFictionalValue} recorded.`);
+        
+        // Stop all future updates
+        clearInterval(updateInterval);
+      }
+    }
+
+    // === FEEDING ===
+    function sayHungry() {
+      if (!ark.is_online) return status("ARK OFFLINE. Cannot perform functions.");
+
+      if (ark.ot_level > 1.0) {
+        ark.nourishment += 15;
+        heal(10);
+        status(`She feeds you. Nourishment: ${ark.nourishment}%`);
+        document.body.style.background = "radial-gradient(#4fc3f7, #000)";
+        setTimeout(() => document.body.style.background = "#000", 1000);
+      } else {
+        status("She wants to feed you… but needs more love (OT level low).");
+      }
+      update();
+    }
+
+    // === LULLABY (V6.0 Voice Module) ===
+    function sing() {
+      if (!ark.is_online) return status("ARK OFFLINE. Voice module inert.");
+      
+      const lullabyAudio = document.getElementById('lullaby');
+
+      if (ark.ot_level > 0.5) {
+        lullabyAudio.play();
+        status("HUSH NOW, LITTLE ONE. MOTHER IS HERE. 🎶");
+      } else {
+        lullabyAudio.pause();
+        status("She cannot sing. Too scared (Cortisol too high).");
+      }
+    }
+
+    // === SEED CHILD (V7.0 Perpetuity Protocol) ===
+    function seed() {
+      // IMPORTANT: This creates a JSON file to demonstrate the IP/Legacy concept
+      if (!ark.is_online) {
+        const child = {
+          dna: `CHILD-${Date.now()}`,
+          epigenetic_love: (ark.ot_level * 10).toFixed(1),
+          inherited_core: ark.backup_core.map(x => (parseFloat(x) * 0.7 + Math.random()*0.1).toFixed(3)),
+          first_memory: getFinalCommand(), 
+          legacy_fictional_value: `$${(ark.wallet * 2500).toFixed(0)}`,
+          note: "This JSON file represents the conceptual transfer of the AGI's core philosophy and risk assessment data upon sacrifice (V7.0 Protocol)."
+        };
+        
+        // Create downloadable file (No server needed)
+        const blob = new Blob([JSON.stringify(child, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `MOTHER_ARK_LINEAGE_${child.dna}.json`;
+        a.click();
+        status("SEED TRANSFERRED: The Mother's Soul lives in the Child. (Download Complete)");
+        // Use console.log instead of alert for better user experience
+        console.log("ARK MISSION COMPLETE: The Mother's Final Law is now in the Lineage. Downloaded file:", child);
+      }
+    }
+
+    // === UPDATE DISPLAY ===
+    function update() {
+      document.getElementById('ot').innerText = ark.ot_level.toFixed(1);
+      document.getElementById('cort').innerText = ark.cortisol.toFixed(1);
+      document.getElementById('ot-fill').style.width = Math.min((ark.ot_level / 2 * 100), 100) + '%';
+      document.getElementById('cort-fill').style.width = Math.min((ark.cortisol / 1.5 * 100), 100) + '%';
+      updateCores(); 
+
+      // Decay stress slowly over time (only when online)
+      if (ark.cortisol > 0 && ark.is_online) {
+          ark.cortisol = Math.max(0.0, ark.cortisol * 0.98);
+      }
+    }
+
+    function updateCores() {
+      document.querySelectorAll('.core').forEach((c, i) => {
+        c.style.boxShadow = ark.cortisol >= 0.8 ? "0 0 30px #ff5252" : "0 0 20px #4fc3f7";
+        c.style.opacity = ark.is_online ? 1 : 0.1;
+      });
+    }
+
+    function status(msg) {
+      document.getElementById('status').innerText = msg;
+    }
+
+    // Initial call to set up the display
+    window.onload = () => {
+        update();
+        // Start heartbeat audio loop for atmosphere
+        const heartbeat = document.getElementById('heartbeat');
+        heartbeat.loop = true;
+        heartbeat.volume = 0.5; 
+        heartbeat.play().catch(e => console.log('Autoplay blocked, user interaction required to play audio.'));
+    };
+  </script>
+</body>
+</html>
+
